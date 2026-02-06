@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocumentManage - 文档管理系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .documents-list {
+            margin-top: 30px;
+        }
+        .document-item {
+            padding: 10px;
+            border: 1px solid #eee;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DocumentManage</h1>
+        <form id="documentForm">
+            <div class="form-group">
+                <label for="docName">文档名称:</label>
+                <input type="text" id="docName" name="docName" required placeholder="请输入文档名称">
+            </div>
+            <div class="form-group">
+                <label for="docFile">上传文件:</label>
+                <input type="file" id="docFile" name="docFile" required>
+            </div>
+            <button type="submit">保存文档</button>
+        </form>
+        
+        <div class="documents-list" id="documentsList">
+            <h2>已保存的文档</h2>
+            <div id="documentsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // 简单的本地存储实现
+        let documents = JSON.parse(localStorage.getItem('documents') || '[]');
+        
+        function saveDocument(name, file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const doc = {
+                    id: Date.now(),
+                    name: name,
+                    content: e.target.result,
+                    fileName: file.name,
+                    uploadDate: new Date().toISOString()
+                };
+                documents.push(doc);
+                localStorage.setItem('documents', JSON.stringify(documents));
+                renderDocuments();
+                alert('文档保存成功！');
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function renderDocuments() {
+            const container = document.getElementById('documentsContainer');
+            if (documents.length === 0) {
+                container.innerHTML = '<p>暂无文档</p>';
+                return;
+            }
+            
+            container.innerHTML = documents.map(doc => `
+                <div class="document-item">
+                    <strong>${doc.name}</strong> (${doc.fileName})
+                    <br>
+                    <small>上传时间: ${new Date(doc.uploadDate).toLocaleString()}</small>
+                    <br>
+                    <button onclick="viewDocument(${doc.id})" style="background-color: #28a745; margin-top: 5px;">查看</button>
+                    <button onclick="deleteDocument(${doc.id})" style="background-color: #dc3545; margin-top: 5px;">删除</button>
+                </div>
+            `).join('');
+        }
+        
+        function viewDocument(id) {
+            const doc = documents.find(d => d.id === id);
+            if (doc) {
+                const newWindow = window.open();
+                newWindow.document.write(`
+                    <html>
+                    <head><title>${doc.name}</title></head>
+                    <body>
+                        <h1>${doc.name}</h1>
+                        <p>文件名: ${doc.fileName}</p>
+                        <p>上传时间: ${new Date(doc.uploadDate).toLocaleString()}</p>
+                        <hr>
+                        <iframe src="${doc.content}" width="100%" height="600px"></iframe>
+                    </body>
+                    </html>
+                `);
+            }
+        }
+        
+        function deleteDocument(id) {
+            if (confirm('确定要删除这个文档吗？')) {
+                documents = documents.filter(d => d.id !== id);
+                localStorage.setItem('documents', JSON.stringify(documents));
+                renderDocuments();
+            }
+        }
+        
+        document.getElementById('documentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('docName').value;
+            const file = document.getElementById('docFile').files[0];
+            if (name && file) {
+                saveDocument(name, file);
+                this.reset();
+            }
+        });
+        
+        // 初始化显示
+        renderDocuments();
+    </script>
+</body>
+</html>
