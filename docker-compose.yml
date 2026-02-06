@@ -1,13 +1,34 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: documentmanage
+      POSTGRES_USER: documentuser
+      POSTGRES_PASSWORD: documentpass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
   documentmanage:
     build: .
     ports:
-      - "3000:3000"
+      - "3002:3002"
     volumes:
       - ./uploads:/app/uploads
-      - ./data:/app/data
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=documentmanage
+      - DB_USER=documentuser
+      - DB_PASS=documentpass
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:

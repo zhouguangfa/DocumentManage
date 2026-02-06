@@ -1,21 +1,24 @@
-const mongoose = require('mongoose');
+const { Pool } = require('pg');
+require('dotenv').config();
 
-// 连接 MongoDB 数据库
-async function connectToDatabase() {
-  try {
-    // 使用本地 MongoDB 实例（生产环境应该使用环境变量）
-    const mongoUri = 'mongodb://localhost:27017/documentmanage';
-    
-    await mongoose.connect(mongoUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    
-    console.log('MongoDB 数据库连接成功');
-  } catch (error) {
-    console.error('MongoDB 连接失败:', error);
-    process.exit(1);
+// PostgreSQL 连接配置
+const pool = new Pool({
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres',
+  database: process.env.DB_NAME || 'documentmanage',
+});
+
+// 测试数据库连接
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('PostgreSQL 连接失败:', err.stack);
+  } else {
+    console.log('PostgreSQL 数据库连接成功');
   }
-}
+});
 
-module.exports = { connectToDatabase };
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+};
