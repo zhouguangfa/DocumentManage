@@ -9,7 +9,7 @@ const Document = require('./models/Document');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = 'document_manage_secret_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'document_manage_secret_key_2026';
 
 // 创建必要的目录
 const uploadDir = path.join(__dirname, 'uploads');
