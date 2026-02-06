@@ -8,7 +8,7 @@ const User = require('./models/User');
 const Document = require('./models/Document');
 
 const app = express();
-const PORT = 3002;
+const PORT = process.env.PORT || 3000;
 const JWT_SECRET = 'document_manage_secret_key_2026';
 
 // 创建必要的目录
