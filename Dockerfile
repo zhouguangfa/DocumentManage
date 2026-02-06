@@ -1,7 +1,12 @@
-FROM node:18-alpine
+FROM node:18-slim
 
 # 设置工作目录
 WORKDIR /app
+
+# 安装 PostgreSQL 客户端库（用于编译 pg-native）
+RUN apt-get update && \
+    apt-get install -y postgresql-client libpq-dev python3 build-essential && \
+    rm -rf /var/lib/apt/lists/*
 
 # 复制 package.json 和 package-lock.json
 COPY package*.json ./
@@ -13,7 +18,7 @@ RUN npm ci --only=production && npm cache clean --force
 COPY . .
 
 # 创建必要的目录
-RUN mkdir -p uploads data/documents
+RUN mkdir -p uploads
 
 # 暴露端口
 EXPOSE 3000
