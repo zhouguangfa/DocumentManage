@@ -1,92 +1,78 @@
 # DocumentManage - 文档管理系统
 
-一个简单的文档管理 Web 应用，支持用户认证、文件上传和搜索功能。
+一个简单的文档管理 Web 应用，支持用户认证、文件上传、搜索和管理功能。
 
-## 功能特性
+## 🚀 功能特性
 
-✅ **用户认证**：
-- 用户注册和登录
-- JWT 令牌认证
-- 密码加密存储
+- **用户认证**: 注册、登录、JWT 令牌验证
+- **文档管理**: 上传、查看、删除文档
+- **搜索功能**: 按文档名称实时搜索
+- **数据持久化**: 文件系统数据库存储
+- **响应式设计**: 适配桌面和移动设备
 
-✅ **文档管理**：
-- 上传文档（支持任意文件类型）
-- 查看已上传文档列表
-- 删除文档
-- 下载文档
+## 📦 部署方式
 
-✅ **搜索功能**：
-- 按文档名称搜索
-- 按原始文件名搜索
-- 实时搜索结果
+### 方式一：本地运行
 
-✅ **数据存储**：
-- 用户数据：JSON 文件存储
-- 文档元数据：JSON 文件存储  
-- 上传文件：本地文件系统存储
+```bash
+# 安装依赖
+npm install
 
-## 技术栈
+# 启动服务器
+node server.js
 
-- **前端**: HTML5, CSS3, JavaScript (原生)
-- **后端**: Node.js, Express
-- **认证**: JWT, bcrypt
-- **存储**: 本地文件系统 (无需数据库)
+# 访问 http://localhost:3002
+```
 
-## 安装和运行
+### 方式二：Docker 部署
 
-1. 克隆仓库：
-   ```bash
-   git clone https://github.com/zhouguangfa/DocumentManage.git
-   cd DocumentManage
-   ```
+#### 使用 Docker Compose（推荐）
 
-2. 安装依赖：
-   ```bash
-   npm install
-   ```
+```bash
+# 构建并启动服务
+docker-compose up --build
 
-3. 启动服务器：
-   ```bash
-   node server.js
-   ```
+# 访问 http://localhost:3002
+```
 
-4. 访问应用：
-   - 打开浏览器访问 `http://localhost:3002`
-   - 注册新账户或登录现有账户
-   - 开始上传和管理文档
+#### 手动构建 Docker 镜像
 
-## API 端点
+```bash
+# 构建镜像
+docker build -t documentmanage .
 
+# 运行容器
+docker run -d -p 3002:3002 --name documentmanage -v $(pwd)/data:/app/data -v $(pwd)/uploads:/app/uploads documentmanage
+
+# 访问 http://localhost:3002
+```
+
+## 📁 目录结构
+
+- `server.js` - 主服务器文件
+- `index.html` - 主页面
+- `login.html` - 登录/注册页面  
+- `models/` - 数据模型
+- `config/` - 配置文件
+- `data/` - 用户和文档数据（持久化）
+- `uploads/` - 上传的文件（持久化）
+
+## 🛡️ API 端点
+
+### 认证
 - `POST /api/register` - 用户注册
-- `POST /api/login` - 用户登录  
-- `GET /api/user` - 获取当前用户信息
+- `POST /api/login` - 用户登录
+- `GET /api/user` - 获取用户信息
+
+### 文档管理
 - `POST /api/upload` - 上传文档
 - `GET /api/documents` - 获取文档列表
 - `GET /api/search?q=关键词` - 搜索文档
 - `DELETE /api/documents/:id` - 删除文档
-- `GET /api/documents/:id/file` - 下载文档文件
+- `GET /api/documents/:id/file` - 下载文件
 
-## 目录结构
+## 📝 注意事项
 
-```
-DocumentManage/
-├── server.js          # 主服务器文件
-├── index.html         # 主页面
-├── login.html         # 登录/注册页面  
-├── style.css          # 样式文件
-├── uploads/           # 上传的文件存储目录
-└── data/              # 用户和文档元数据存储目录
-    ├── users.json     # 用户数据
-    └── documents/     # 文档元数据
-```
-
-## 注意事项
-
-- 所有数据都存储在本地文件系统中
-- 生产环境建议使用真正的数据库（如 MongoDB、PostgreSQL）
-- JWT 密钥在生产环境中应该使用环境变量配置
-- 文件上传大小限制可以通过 multer 配置调整
-
-## 许可证
-
-MIT License
+- 数据存储在 `data/` 和 `uploads/` 目录，建议挂载为 Docker 卷以持久化数据
+- 默认端口为 3002，可通过环境变量修改
+- 生产环境请修改 JWT 密钥
