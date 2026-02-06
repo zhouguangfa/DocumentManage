@@ -1,18 +1,20 @@
 {
   "name": "documentmanage",
   "version": "1.0.0",
-  "description": "A simple document management system",
+  "description": "A simple document management system with user authentication, search functionality, and database support",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "cors": "^2.8.6",
-    "express": "^4.22.1",
-    "fs": "^0.0.1-security",
-    "multer": "^1.4.5-lts.1",
-    "path": "^0.12.7"
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.6.3",
+    "multer": "^1.4.5-lts.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
@@ -20,7 +22,8 @@
   "keywords": [
     "document",
     "management",
-    "upload"
+    "upload",
+    "authentication"
   ],
   "author": "zhouguangfa",
   "license": "MIT"

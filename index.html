@@ -9,39 +9,197 @@
 <body>
     <div class="container">
         <h1>DocumentManage</h1>
-        <form id="documentForm" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="docName">文档名称:</label>
-                <input type="text" id="docName" name="docName" required placeholder="请输入文档名称">
-            </div>
-            <div class="form-group">
-                <label for="docFile">上传文件:</label>
-                <input type="file" id="docFile" name="docFile" required>
-            </div>
-            <button type="submit">保存文档</button>
-        </form>
         
-        <div class="documents-list" id="documentsList">
-            <h2>已保存的文档</h2>
-            <div id="documentsContainer"></div>
+        <!-- 登录/注册表单 -->
+        <div id="authSection">
+            <div id="loginForm" class="auth-form">
+                <h2>登录</h2>
+                <form id="loginFormEl">
+                    <div class="form-group">
+                        <label for="loginUsername">用户名:</label>
+                        <input type="text" id="loginUsername" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">密码:</label>
+                        <input type="password" id="loginPassword" name="password" required>
+                    </div>
+                    <button type="submit">登录</button>
+                </form>
+                <p>还没有账户？<a href="#" onclick="showRegisterForm()">注册</a></p>
+            </div>
+            
+            <div id="registerForm" class="auth-form" style="display: none;">
+                <h2>注册</h2>
+                <form id="registerFormEl">
+                    <div class="form-group">
+                        <label for="registerUsername">用户名:</label>
+                        <input type="text" id="registerUsername" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">密码:</label>
+                        <input type="password" id="registerPassword" name="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerConfirmPassword">确认密码:</label>
+                        <input type="password" id="registerConfirmPassword" name="confirmPassword" required>
+                    </div>
+                    <button type="submit">注册</button>
+                </form>
+                <p>已有账户？<a href="#" onclick="showLoginForm()">登录</a></p>
+            </div>
+        </div>
+        
+        <!-- 主要应用界面（登录后显示） -->
+        <div id="appSection" style="display: none;">
+            <div class="user-info">
+                <span id="currentUser">欢迎，<span id="usernameDisplay"></span></span>
+                <button onclick="logout()" style="background-color: #6c757d;">退出登录</button>
+            </div>
+            
+            <!-- 搜索功能 -->
+            <div class="search-section">
+                <input type="text" id="searchInput" placeholder="搜索文档..." oninput="searchDocuments()">
+                <button onclick="searchDocuments()">搜索</button>
+            </div>
+            
+            <!-- 上传表单 -->
+            <form id="documentForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="docName">文档名称:</label>
+                    <input type="text" id="docName" name="docName" required placeholder="请输入文档名称">
+                </div>
+                <div class="form-group">
+                    <label for="docFile">上传文件:</label>
+                    <input type="file" id="docFile" name="docFile" required>
+                </div>
+                <button type="submit">保存文档</button>
+            </form>
+            
+            <!-- 文档列表 -->
+            <div class="documents-list" id="documentsList">
+                <h2>我的文档</h2>
+                <div id="documentsContainer"></div>
+            </div>
         </div>
     </div>
 
     <script>
+        let currentUser = null;
+        let allDocuments = [];
+        
+        // 显示登录表单
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+        
+        // 显示注册表单
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        }
+        
+        // 登录
+        async function login(username, password) {
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data.user;
+                    document.getElementById('usernameDisplay').textContent = currentUser.username;
+                    document.getElementById('authSection').style.display = 'none';
+                    document.getElementById('appSection').style.display = 'block';
+                    loadDocuments();
+                } else {
+                    const error = await response.json();
+                    alert('登录失败: ' + error.message);
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                alert('登录失败，请检查网络连接');
+            }
+        }
+        
+        // 注册
+        async function register(username, password) {
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (response.ok) {
+                    alert('注册成功！请登录。');
+                    showLoginForm();
+                } else {
+                    const error = await response.json();
+                    alert('注册失败: ' + error.message);
+                }
+            } catch (error) {
+                console.error('注册错误:', error);
+                alert('注册失败，请检查网络连接');
+            }
+        }
+        
+        // 退出登录
+        function logout() {
+            currentUser = null;
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('appSection').style.display = 'none';
+            showLoginForm();
+        }
+        
         // 从后端加载文档列表
         async function loadDocuments() {
             try {
-                const response = await fetch('/api/documents');
-                const documents = await response.json();
-                renderDocuments(documents);
+                const response = await fetch('/api/documents', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+                if (response.ok) {
+                    allDocuments = await response.json();
+                    renderDocuments(allDocuments);
+                } else {
+                    const error = await response.json();
+                    console.error('加载文档失败:', error);
+                    document.getElementById('documentsContainer').innerHTML = '<p>加载文档失败</p>';
+                }
             } catch (error) {
                 console.error('加载文档失败:', error);
                 document.getElementById('documentsContainer').innerHTML = '<p>加载文档失败，请确保服务器正在运行</p>';
             }
         }
         
+        // 搜索文档
+        function searchDocuments() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (!searchTerm) {
+                renderDocuments(allDocuments);
+                return;
+            }
+            
+            const filteredDocs = allDocuments.filter(doc => 
+                doc.name.toLowerCase().includes(searchTerm) || 
+                doc.originalName.toLowerCase().includes(searchTerm)
+            );
+            renderDocuments(filteredDocs);
+        }
+        
+        // 保存文档
         async function saveDocument(formData) {
             try {
+                formData.append('token', localStorage.getItem('token'));
                 const response = await fetch('/api/upload', {
                     method: 'POST',
                     body: formData
@@ -51,7 +209,7 @@
                     const result = await response.json();
                     alert('文档保存成功！');
                     document.getElementById('documentForm').reset();
-                    loadDocuments(); // 重新加载文档列表
+                    loadDocuments();
                 } else {
                     const error = await response.json();
                     alert('保存失败: ' + error.error);
@@ -62,6 +220,7 @@
             }
         }
         
+        // 渲染文档列表
         function renderDocuments(documents) {
             const container = document.getElementById('documentsContainer');
             if (documents.length === 0) {
@@ -75,17 +234,21 @@
                     <br>
                     <small>上传时间: ${new Date(doc.uploadDate).toLocaleString()}</small>
                     <br>
-                    <a href="${doc.filePath}" target="_blank" style="display: inline-block; background-color: #28a745; color: white; padding: 5; text-decoration: none; border-radius: 3px; margin-top: 5px;">查看</a>
-                    <button onclick="deleteDocument(${doc.id})" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; margin-top: 5px; cursor: pointer;">删除</button>
+                    <a href="/uploads/${doc.fileName}" target="_blank" style="display: inline-block; background-color: #28a745; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px; margin-top: 5px;">查看</a>
+                    <button onclick="deleteDocument('${doc.id}')" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; margin-top: 5px; cursor: pointer;">删除</button>
                 </div>
             `).join('');
         }
         
+        // 删除文档
         async function deleteDocument(id) {
             if (confirm('确定要删除这个文档吗？')) {
                 try {
                     const response = await fetch(`/api/documents/${id}`, {
-                        method: 'DELETE'
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        }
                     });
                     
                     if (response.ok) {
@@ -102,6 +265,28 @@
             }
         }
         
+        // 表单事件处理
+        document.getElementById('loginFormEl').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            login(username, password);
+        });
+        
+        document.getElementById('registerFormEl').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                alert('密码不匹配');
+                return;
+            }
+            
+            register(username, password);
+        });
+        
         document.getElementById('documentForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
@@ -112,8 +297,32 @@
             }
         });
         
-        // 页面加载时获取文档列表
-        loadDocuments();
+        // 页面加载时检查是否已登录
+        window.addEventListener('load', function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                // 验证 token
+                fetch('/api/auth/verify', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        response.json().then(data => {
+                            currentUser = data.user;
+                            document.getElementById('usernameDisplay').textContent = currentUser.username;
+                            document.getElementById('authSection').style.display = 'none';
+                            document.getElementById('appSection').style.display = 'block';
+                            loadDocuments();
+                        });
+                    } else {
+                        localStorage.removeItem('token');
+                    }
+                }).catch(() => {
+                    localStorage.removeItem('token');
+                });
+            }
+        });
     </script>
 </body>
 </html>

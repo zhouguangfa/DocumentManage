@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocumentManage - 登录</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 350px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .switch-form {
+            text-align: center;
+            margin-top: 15px;
+            color: #666;
+        }
+        .switch-form a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .switch-form a:hover {
+            text-decoration: underline;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>DocumentManage</h2>
+        
+        <!-- 登录表单 -->
+        <form id="loginForm" style="display: block;">
+            <div class="form-group">
+                <label for="loginUsername">用户名:</label>
+                <input type="text" id="loginUsername" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">密码:</label>
+                <input type="password" id="loginPassword" name="password" required>
+            </div>
+            <button type="submit">登录</button>
+            <div class="error-message" id="loginError"></div>
+            <div class="switch-form">
+                还没有账户？<a href="#" onclick="showRegisterForm()">注册</a>
+            </div>
+        </form>
+
+        <!-- 注册表单 -->
+        <form id="registerForm" style="display: none;">
+            <div class="form-group">
+                <label for="registerUsername">用户名:</label>
+                <input type="text" id="registerUsername" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">密码:</label>
+                <input type="password" id="registerPassword" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="registerConfirmPassword">确认密码:</label>
+                <input type="password" id="registerConfirmPassword" name="confirmPassword" required>
+            </div>
+            <button type="submit">注册</button>
+            <div class="error-message" id="registerError"></div>
+            <div class="switch-form">
+                已有账户？<a href="#" onclick="showLoginForm()">登录</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // 显示登录表单
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            clearErrors();
+        }
+
+        // 显示注册表单
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            clearErrors();
+        }
+
+        // 清除错误信息
+        function clearErrors() {
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('registerError').style.display = 'none';
+        }
+
+        // 登录处理
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            clearErrors();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // 保存 token 到 localStorage
+                    localStorage.setItem('authToken', result.token);
+                    localStorage.setItem('currentUser', JSON.stringify(result.user));
+                    window.location.href = '/'; // 跳转到主页面
+                } else {
+                    document.getElementById('loginError').textContent = result.message || '登录失败';
+                    document.getElementById('loginError').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                document.getElementById('loginError').textContent = '网络错误，请稍后重试';
+                document.getElementById('loginError').style.display = 'block';
+            }
+        });
+
+        // 注册处理
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            clearErrors();
+            
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                document.getElementById('registerError').textContent = '两次输入的密码不一致';
+                document.getElementById('registerError').style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('注册成功！请登录');
+                    showLoginForm();
+                    document.getElementById('loginUsername').value = username;
+                } else {
+                    document.getElementById('registerError').textContent = result.message || '注册失败';
+                    document.getElementById('registerError').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('注册错误:', error);
+                document.getElementById('registerError').textContent = '网络错误，请稍后重试';
+                document.getElementById('registerError').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
