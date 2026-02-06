@@ -6,8 +6,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: documentmanage
-      POSTGRES_USER: documentuser
-      POSTGRES_PASSWORD: documentpass
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -19,10 +19,12 @@ services:
       - "3000:3000"
     volumes:
       - ./uploads:/app/uploads
+      - ./data:/app/data
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://documentuser:documentpass@postgres:5432/documentmanage
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/documentmanage
+      - JWT_SECRET=document_manage_secret_key_2026
+      - PORT=3000
     depends_on:
       - postgres
 

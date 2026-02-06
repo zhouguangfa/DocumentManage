@@ -36,4 +36,13 @@ const User = sequelize.define('User', {
   updatedAt: 'updated_at'
 });
 
+// 自定义方法
+User.findByUsername = async function(username) {
+  return await this.findOne({ where: { username } });
+};
+
+User.findById = async function(id) {
+  return await this.findByPk(id);
+};
+
 module.exports = User;

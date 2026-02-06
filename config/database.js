@@ -1,24 +1,28 @@
-const { Pool } = require('pg');
+const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-// PostgreSQL 连接配置
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-  database: process.env.DB_NAME || 'documentmanage',
-});
+// 从环境变量获取数据库连接信息
+const databaseUrl = process.env.DATABASE_URL || 
+  `postgresql://${process.env.DB_USER || 'postgres'}:${process.env.DB_PASSWORD || 'postgres'}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME || 'documentmanage'}`;
 
-// 测试数据库连接
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error('PostgreSQL 连接失败:', err.stack);
-  } else {
-    console.log('PostgreSQL 数据库连接成功');
+const sequelize = new Sequelize(databaseUrl, {
+  dialect: 'postgres',
+  logging: false, // 设置为 true 可以查看 SQL 查询日志
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
   }
 });
 
-module.exports = {
-  query: (text, params) => pool.query(text, params),
-};
+// 测试数据库连接
+sequelize.authenticate()
+  .then(() => {
+    console.log('PostgreSQL 数据库连接成功');
+  })
+  .catch((error) => {
+    console.error('PostgreSQL 连接失败:', error);
+  });
+
+module.exports = sequelize;
