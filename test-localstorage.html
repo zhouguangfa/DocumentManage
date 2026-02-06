@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LocalStorage Test</title>
+</head>
+<body>
+    <h1>LocalStorage 测试</h1>
+    <script>
+        // 测试 localStorage
+        try {
+            localStorage.setItem('test', 'DocumentManage works!');
+            const value = localStorage.getItem('test');
+            document.write('<p style="color: green;">✅ LocalStorage 正常工作: ' + value + '</p>');
+            
+            // 测试文档存储结构
+            const testDoc = {
+                id: Date.now(),
+                name: '测试文档',
+                fileName: 'test.txt',
+                uploadDate: new Date().toISOString()
+            };
+            let docs = JSON.parse(localStorage.getItem('documents') || '[]');
+            docs.push(testDoc);
+            localStorage.setItem('documents', JSON.stringify(docs));
+            document.write('<p style="color: green;">✅ 文档存储结构正常</p>');
+            
+        } catch (e) {
+            document.write('<p style="color: red;">❌ LocalStorage 错误: ' + e.message + '</p>');
+        }
+    </script>
+</body>
+</html>
